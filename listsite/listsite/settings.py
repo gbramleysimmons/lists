@@ -132,10 +132,6 @@ CORS_ORIGIN_ALLOW_ALL = True
 # https://docs.djangoproject.com/en/2.2/howto/static-files/
 
 STATIC_URL = '/static/'
-AUTH_USER_MODEL = 'list.CustomUser'
 
-LOGIN_REDIRECT_URL = ""
-LOGOUT_REDIRECT_URL = ""
 SITE_ID = 1
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 

@@ -1,10 +1,13 @@
+from rest_framework import views, response
 from django.shortcuts import render
-from rest_framework import viewsets, views, response, generics
-from django.shortcuts import render, get_list_or_404, get_object_or_404
-from rest_framework.permissions import IsAuthenticated
-import random, string
+import random
+import string
 from django.db.models import Q
 from . import models, serializers
+from django.template import loader
+from django.utils.datastructures import MultiValueDictKeyError
+from django.http import HttpResponse
+
 
 # Generates a random 6 character id for the lists
 def gen_random_id():
@@ -21,68 +24,95 @@ class NewList(views.APIView):
 
 
 # Endpoint to add a new item to a list
-class NewItem(views.APIView):
-
+class AddItem(views.APIView):
     def post(self, request, format=None):
-        list_id = request.data['list_id']
-        my_list = models.List.objects.filter(pk=list_id)[0]
+        try:
+            list_id = request.data['list_id']
+        except MultiValueDictKeyError:
+            return response.Response({"error": "Invalid request format"})
+
+        try:
+            my_list = models.List.objects.get(pk=list_id)
+        except models.List.DoesNotExist:
+            return response.Response({"error": "List does not exist"})
+
         new_item = models.ListItem()
         new_item.list = my_list
+
         new_item.item = request.data['item']
         new_item.save()
         return response.Response(serializers.ListItemSerializer(new_item).data)
 
 
+# Deletes an item from a list
 class DeleteItem(views.APIView):
     def post(self, request, format=None):
-        list_id = request.data['list_id']
-        item = request.data['item']
         try:
-            models.ListItem.objects.filter(Q(list_id=list_id) & Q(item=item)).delete()
+            list_id = request.data['list_id']
+            item = request.data['item']
+        except MultiValueDictKeyError:
+            return response.Response({"error": "Invalid request format"})
+        try:
+            my_list = models.List.objects.get(pk=list_id)
+        except models.List.DoesNotExist:
+            return response.Response({"error": "List does not exist"})
+        try:
+            models.ListItem.objects.get(Q(list=my_list) & Q(item=item)).delete()
             return response.Response()
 
         except models.ListItem.DoesNotExist:
             return response.Response({"error": "Item doesn't exist"})
 
 
+# Clears a list
 class ClearList(views.APIView):
     def post(self, request, format=None):
-        list_id = request.data['list_id']
-        curr_list = get_object_or_404(models.List, pk=list_id)
+        try:
+            list_id = request.data['list_id']
+        except MultiValueDictKeyError:
+            return response.Response({"error": "Invalid request format"})
+        try:
+            curr_list = models.List.objects.get(pk=list_id)
+        except models.List.DoesNotExist:
+            return response.Response({"error": "List does not exist"})
         curr_list.listitem_set.all().delete()
         return response.Response()
 
 
+# Returns all items in a list
 class ViewList(views.APIView):
 
     def post(self, request, format=None):
-        list_id = request.data['list_id']
-        list_items = map(lambda item: models.ListItemSerializer(item).data, models.ListItem.objects.filter(list_id=list_id))
+        try:
+            list_id = request.data['list_id']
+        except MultiValueDictKeyError:
+            return response.Response({"error": "Invalid request format"})
+
+        try:
+            my_list = models.List.objects.get(pk=list_id)
+        except models.List.DoesNotExist:
+            return response.Response({"error": "List does not exist"})
+
+        list_items = list(map(lambda item: serializers.ListItemSerializer(item).data,
+                              models.ListItem.objects.filter(list=my_list)))
         return response.Response({"list_items": list_items})
 
 
+# Checks if the database contains a list with the specified ID
 class ValidateList(views.APIView):
     def post(self, request, format=None):
-        list_id = request.data['list_id']
         try:
-            List.objects.get(pk=list_id)
+            list_id = request.data['list_id']
+        except MultiValueDictKeyError:
+            return response.Response({"error": "Invalid request format"})
+
+        try:
+            models.List.objects.get(pk=list_id)
             return response.Response({"exists": True})
-        except List.DoesNotExist:
+        except models.List.DoesNotExist:
             return response.Response({"exists": False})
 
-class Signup(views.APIView):
-    def post(self, request, format=None):
-        if len(models.CustomUser.objects.filter(pk=request.data["username"])) != 0:
-            return response.Response({"error": "Bad username"})
-        else:
-            user = models.CustomUser(username=request.data['phone_number'])
-            user.phone_number = request.data['phone_number']
-            user.email = request.data['email']
-            user.password = request.data['password']
-            user.save()
-            return response.Response({"success": True})
 
-
-class UserListView(generics.ListCreateAPIView):
-    queryset = models.CustomUser.objects.all()
-    serializer_class = serializers.UserSerializer
+def docs(request):
+    template = loader.get_template('list/docs.html')
+    return HttpResponse(template.render({}, request))

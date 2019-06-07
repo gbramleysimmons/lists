@@ -1,0 +1,126 @@
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'list/styles.css' %}jgkhAP">
+
+<div class="header">
+    <h1>List API</h1>
+</div>
+    <ul class="index">
+        <li><a href="#introduction">Introduction</a> </li>
+        <li><a href="#newlist"> /newlist </a></li>
+        <li><a href="#validatelist"> /validatelist </a></li>
+        <li><a href="#viewlist"> /viewlist </a></li>
+        <li><a href="#additem"> /additem </a></li>
+        <li><a href="#deleteitem"> /deleteitem </a></li>
+        <li><a href="#clearlist"> /clearlist </a></li>
+    </ul>
+
+<div class="section" id="introduction">
+    <h2>Introduction</h2>
+    list is a micro REST API to manage and view simple lists, written in Django.
+    list is publicly accessible, and uses no security procedures. It stores data in a sqlite3 database.
+    <br>
+    All requests are POST requests, and must include the header {"content-type": "application/json"}
+
+    On error, all endpoints will respond with status code 200, but the response will include an "error" field.
+
+</div>
+
+<div class="section" id="newlist">
+    <h2>/newlist</h2>
+    Creates a new list with a random 6-character id on POST request.
+
+    Request Parameters: none
+
+    Response Parameters:
+
+     <ul class="params">
+        <li>"list_id": id of the new list</li>
+    </ul>
+
+
+</div>
+
+<div class="section" id="validatelist">
+    <h2>/validatelist</h2>
+
+    Validates an existance of a list given its id
+
+    Request Parameters:
+     <ul class="params">
+        <li>"list_id": id of the list to validate</li>
+    </ul>
+
+    Response Parameters:
+     <ul class="params">
+        <li>"exists": True if the list exists, false if not</li>
+    </ul>
+
+</div>
+
+
+<div class="section" id="viewlist">
+    <h2>/viewlist</h2>
+
+    Returns the items in the list given the id
+
+    Request Parameters:
+     <ul class="params">
+        <li>"list_id": id of the new list</li>
+    </ul>
+
+    Response Parameters:
+     <ul class="params">
+        <li>"list_items": List of item objects, which have the form <br>
+        {"id": item id, "item": item text, "list": list id} </li>
+    </ul>
+
+
+
+</div>
+
+
+<div class="section" id="additem">
+    <h2>/additem</h2>
+
+    Adds an item to the given list
+
+    Request Parameters:
+     <ul class="params">
+        <li>"list_id": id of the list</li>
+    </ul>
+
+    Response Parameters:
+     <ul class="params">
+        <li>"item": item which was added in the form {"id": item id, "item": item text, "list": list id}  </li>
+    </ul>
+
+</div>
+
+<div class="section" id="deleteitem">
+    <h2>/deleteitem</h2>
+
+    Deletes an item from the given list
+
+    Request Parameters:
+     <ul class="params">
+        <li>"list_id": id of the list</li>
+        <li>"item": item text of item to delete</li>
+
+    </ul>
+
+    Response Parameters: none
+
+</div>
+
+<div class="section" id="clearlist">
+    <h2>/clearlist</h2>
+
+    Clears all items from a list
+
+    Request Parameters:
+     <ul class="params">
+        <li>"list_id": id of the list</li>
+    </ul>
+
+    Response Parameters: none
+
