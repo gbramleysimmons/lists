@@ -13,7 +13,7 @@ django.allauth
 #Python
 cffi==1.12.3
 coverage==4.5.3
-cryptography==2.7
+cryptography==3.2
 httplib2==0.12.3
 
 
